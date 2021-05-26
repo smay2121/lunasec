@@ -1,4 +1,4 @@
-import React, { Component, CSSProperties } from 'react';
+import React, { Component } from 'react';
 
 import { RenderData, WrappedProps } from '../../types';
 type AnchorRenderData = RenderData<HTMLAnchorElement>;
@@ -34,10 +34,9 @@ export default class Downloader extends Component<AnchorProps> {
   }
 
   render() {
-    const { renderData, ...otherProps } = this.props;
+    const { renderData } = this.props;
     return (
       <div
-        {...otherProps}
         className={`secure-downloader-container-${renderData.frameId} secure-downloader-container-${this.props.name}`}
         style={renderData.parentContainerStyle}
       >
