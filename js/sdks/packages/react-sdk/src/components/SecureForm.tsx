@@ -74,7 +74,7 @@ export class SecureForm extends Component<SecureFormProps> {
 
     const resp = await fetch(secureFrameEnsureSessionURL.toString(), {
       credentials: 'include',
-      mode: 'cors'
+      mode: 'cors',
     });
 
     if (resp.status !== 200) {
@@ -242,6 +242,7 @@ export class SecureForm extends Component<SecureFormProps> {
       <SecureFormContext.Provider
         value={{
           addComponent: (component) => {
+            console.log('adding component');
             this.childInputs[component.frameId] = component;
             // Assume that this will be destroyed or otherwise stop sending messages when the component unmounts
             this.watchStyle(component);
