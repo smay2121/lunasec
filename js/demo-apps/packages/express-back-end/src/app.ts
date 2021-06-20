@@ -3,6 +3,7 @@ import cors from 'cors';
 import {processForm, SecureFormData} from './process-form';
 import {DeploymentStage, LunaSecExpressAuthPlugin, LunaSecTokenAuthService, SecureResolver} from '@lunasec/node-sdk';
 import {SecretProviders} from "@lunasec/node-sdk/build/main/token-auth-service/types";
+import {db} from './fake-database'
 
 const app = express();
 
@@ -101,7 +102,7 @@ app.get('/grant', async (req, res) => {
   }
 
   try {
-    const tokenGrant = await tokenService.authorize(tokenId);
+    const tokenGrant = await tokenService.grant(tokenId);
     res.json({
       "grant": tokenGrant.toString()
     });
@@ -112,6 +113,22 @@ app.get('/grant', async (req, res) => {
     res.end();
     return;
   }
+})
+
+app.get('/pre-filled-form-fields', async (_req, res) => {
+
+  res.json()
+  try {
+    const grantifiedFields = tokenService.grantifyObject(db.savedFormFieldTokens)
+    res.json(grantifiedFields);
+    res.end();
+  } catch (e) {
+    console.error("error while issuing token grants ", e);
+    res.status(500);
+    res.end();
+    return;
+  }
+
 })
 
 export default app;

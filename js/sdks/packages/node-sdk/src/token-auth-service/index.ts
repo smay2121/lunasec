@@ -1,3 +1,4 @@
+import { isToken } from '@lunasec/tokenizer-sdk';
 import { KeyLike, SignJWT } from 'jose/jwt/sign';
 import { JWTPayload } from 'jose/types';
 
@@ -22,7 +23,7 @@ export class LunaSecAuthenticationGrant {
   }
 }
 
-export class LunaSecDetokenizeTokenGrant {
+export class LunaSecDetokenizationGrant {
   private readonly detokenizationGrant!: string;
 
   constructor(detokenizationGrant: string) {
@@ -82,22 +83,45 @@ export class LunaSecTokenAuthService {
     return jwt.toString();
   }
 
+  private async createDetokenizationGrant(claims: { token_id: string }) {
+    const encodedJwt = await this.createJwt(claims);
+    return new LunaSecDetokenizationGrant(encodedJwt);
+  }
+
   public async authenticate(payload: JWTPayload): Promise<LunaSecAuthenticationGrant> {
     const encodedJwt = await this.createJwt(payload);
     return new LunaSecAuthenticationGrant(encodedJwt);
   }
 
-  public async authorize(token: string): Promise<LunaSecDetokenizeTokenGrant> {
-    const claims = { token_id: token };
-    const encodedJwt = await this.createJwt(claims);
-    return new LunaSecDetokenizeTokenGrant(encodedJwt);
+  public async grant(t: string): Promise<LunaSecDetokenizationGrant> {
+    if (!isToken(t)) {
+      throw new Error('Attempted to create a LunaSec Token Grant from a string that didnt look like a token');
+    }
+    return this.createDetokenizationGrant({ token_id: t });
   }
 
-  public verifyTokenGrant(tokenGrant: string | LunaSecDetokenizeTokenGrant): boolean {
+  // Handle entire objects that may have some tokens, assumed to be a very common use case with something like a "user" having some tokenized fields
+  public async grantifyObject(o: Record<string, any>) {
+    const grantPromises = Object.keys(o).map((key) => {
+      if (typeof o[key] === 'string' && isToken(o[key])) {
+        return this.createDetokenizationGrant(o[key]);
+      } else {
+        return Promise.resolve(o[key]);
+      }
+    });
+    const grantifiedObject: Record<string, any> = {};
+    const valArray = await Promise.all(grantPromises);
+    valArray.forEach((val, index) => {
+      grantifiedObject[Object.keys(o)[index]] = val;
+    });
+    return grantifiedObject;
+  }
+
+  public verifyTokenGrant(tokenGrant: string | LunaSecDetokenizationGrant): boolean {
     if (typeof tokenGrant === 'object') {
       return tokenGrant.isValid();
     }
 
-    return new LunaSecDetokenizeTokenGrant(tokenGrant).isValid();
+    return new LunaSecDetokenizationGrant(tokenGrant).isValid();
   }
 }
