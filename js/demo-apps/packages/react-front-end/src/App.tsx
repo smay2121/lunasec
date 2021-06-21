@@ -22,13 +22,13 @@ interface FormData {
 
 interface IAppState {
   loading: boolean;
-  fields: FormData;
+  formData: FormData;
   authError: string | null;
 }
 
 const defaultState: IAppState = {
   loading: true,
-  fields: {},
+  formData: {},
   authError: null,
 };
 
@@ -38,44 +38,61 @@ class App extends React.Component<Record<string, never>, IAppState> {
     this.state = defaultState;
 
     onLunaSecAuthError((e: Error) => {
+      console.error(e);
       this.setState({ authError: 'Failed to authenticate with LunaSec. \n Is a user logged in?' });
     });
-  }
 
-  async componentDidMount() {
-    this.loadFields();
-    await this.retrieveTokens();
+    void this.loadFormData();
   }
 
   // This kind of works but it creates a grant for the previous token at the moment, because retrieveTokens pulls from sessionstorage.
   //We really need a cleaner way to handle this and to get all of this grant stuff out of this demo app
   // At the very least separate the pulling of tokens from session storage and the turning them into grants into separate functions
-  componentDidUpdate(prevProps: Record<string, any>, prevState: IAppState) {
-    // const oldTokens = prevState.tokenIDs;
-    // const newTokens = this.state.tokenIDs;
-    // const tokenChanged = Object.keys(newTokens).some((tokenName) => {
-    //   return newTokens[tokenName as keyof Tokens] !== oldTokens[tokenName as keyof Tokens];
-    // });
-    // if (tokenChanged) {
-    //   void this.retrieveTokens();
-    // }
-  }
+  // componentDidUpdate(prevProps: Record<string, any>, prevState: IAppState) {
+  // const oldTokens = prevState.tokenIDs;
+  // const newTokens = this.state.tokenIDs;
+  // const tokenChanged = Object.keys(newTokens).some((tokenName) => {
+  //   return newTokens[tokenName as keyof Tokens] !== oldTokens[tokenName as keyof Tokens];
+  // });
+  // if (tokenChanged) {
+  //   void this.retrieveTokens();
+  // }
+  // }
 
   handleFooChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
     console.log('setting foo', event.target.value);
-    this.setState({ fields: { foo: event.target.value } });
+    this.setState({ formData: { foo: event.target.value } });
   }
 
   handleBarChange(event: React.ChangeEvent<HTMLInputElement>) {
     console.log('setting bar', event.target.value);
-    this.setState({ fields: { bar: event.target.value } });
+    this.setState({ formData: { bar: event.target.value } });
   }
 
   handleUploaderChange(tokens: string | Array<string>) {
     console.log('file uploader gave new tokens: ', tokens);
     if (tokens.length === 1) {
-      this.setState({ fields: { file: tokens[0] } });
+      this.setState({ formData: { file: tokens[0] } });
     }
+  }
+
+  async loadFormData() {
+    const url = new URL('http://localhost:3001/get-form-data');
+    const res = await fetch(url.toString());
+    const respJson = (await res.json()) as FormData;
+    this.setState({ formData: respJson });
+    console.log('loaded formdata from server ', this.state.formData);
+  }
+
+  async uploadFormData(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    await fetch('http://localhost:3001/set-form-data', {
+      method: 'POST',
+      body: JSON.stringify(this.state.formData),
+      headers: {
+        'Content-type': 'application/json; charset=UTF-8',
+      },
+    });
   }
   //
   // persistTokens(formEvent: React.FormEvent<HTMLFormElement>) {
@@ -154,13 +171,6 @@ class App extends React.Component<Record<string, never>, IAppState> {
   //   return undefined;
   // }
 
-  async getFormData() {
-    const url = new URL('http://localhost:3001/get-form-fields');
-    const res = await fetch(url.toString());
-    const respJson = (await res.json()) as FormData;
-    this.setState({ fields: respJson });
-  }
-
   renderFileDownloadComponents(fileTokenGrant: string | undefined) {
     if (!fileTokenGrant) {
       return null;
@@ -182,7 +192,7 @@ class App extends React.Component<Record<string, never>, IAppState> {
   }
 
   renderFileComponents() {
-    const fileTokenGrant = this.state.tokenGrants.file;
+    const fileTokenGrant = this.state.formData.file;
     return (
       <div>
         {this.renderFileDownloadComponents(fileTokenGrant)}
@@ -203,24 +213,24 @@ class App extends React.Component<Record<string, never>, IAppState> {
   }
 
   renderForm() {
-    if (this.state.loading) {
-      return null;
-    }
+    // if (this.state.loading) {
+    //   return null;
+    // }
     return (
       <section>
         {this.state.authError && <p style={{ color: 'red' }}>{this.state.authError}</p>}
         <h2>Secure Form</h2>
-        <SecureForm onSubmit={(e) => this.persistTokens(e)}>
+        <SecureForm onSubmit={(e) => this.uploadFormData(e)}>
           <SecureTextArea
             name="foo"
-            token={this.state.tokenGrants.foo}
+            token={this.state.formData.foo}
             onChange={(e) => this.handleFooChange(e)}
             onBlur={(e) => console.log('blur1', e)}
           />
           <SecureInput
             name="bar"
             type="password"
-            token={this.state.tokenGrants.bar}
+            token={this.state.formData.bar}
             onChange={(e) => this.handleBarChange(e)}
             onBlur={(e) => console.log('blur2', e)}
             placeholder="Enter Your Password"
@@ -229,9 +239,9 @@ class App extends React.Component<Record<string, never>, IAppState> {
             className="d-block"
             name="normal"
             type="text"
-            value={this.state.fields.normal}
+            value={this.state.formData.unsecured}
             placeholder="Insecure field coexisting"
-            onChange={(e) => this.setState({ fields: { ...this.state.fields, normal: e.target.value } })}
+            onChange={(e) => this.setState({ formData: { unsecured: e.target.value } })}
             onBlur={(e) => console.log('blur3', e)}
           />
           <input type="submit" />
@@ -239,7 +249,7 @@ class App extends React.Component<Record<string, never>, IAppState> {
             <h2>Secure Paragraph</h2>
             <div>
               <span>Type in the form above to populate</span>
-              <SecureParagraph name="demo-paragraph" token={this.state.tokenGrants.foo} className="test-secure-span" />
+              <SecureParagraph name="demo-paragraph" className="test-secure-span" />
             </div>
           </section>
 
