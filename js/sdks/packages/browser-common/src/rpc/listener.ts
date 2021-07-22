@@ -10,6 +10,7 @@ import { UnknownFrameMessage } from './types';
 //  DEPRECATED, LEFT HERE FOR JS-SDK */
 export function addMessageListener(window: Window, domInstance: Document) {
   const __SECURE_FRAME_URL__ = 'DEPRECATED, THIS WILL BE BROKEN';
+  throw new Error('VANILLA MESSAGE LISTENER IS DEPRECATED');
   window.addEventListener(
     'message',
     (event) => {
@@ -78,7 +79,7 @@ export function addJsEventListener(
 }
 
 export function addReactEventListener(
-  lunaSecDomain: string,
+  _lunaSecDomain: string,
   window: Window,
   controller: AbortController,
   callback: (message: UnknownFrameMessage) => void
@@ -92,9 +93,9 @@ export function addReactEventListener(
   window.addEventListener(
     'message',
     (event) => {
-      if (event.origin !== lunaSecDomain) {
-        return;
-      }
+      // if (event.origin !== lunaSecDomain) {
+      //   return;
+      // }
 
       const frameMessage = safeParseJson<UnknownFrameMessage>(event.data);
 

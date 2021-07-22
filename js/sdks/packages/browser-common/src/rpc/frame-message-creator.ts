@@ -43,6 +43,7 @@ export class FrameMessageCreator {
   }
 
   postReceived(unknownPost: UnknownFrameMessage | FrameNotification): void {
+    console.log('post message received in rpc postReceived', unknownPost);
     if (!unknownPost.frameNonce && !unknownPost.correlationToken) {
       throw new Error(
         'Unknown post message received without correlationToken or frameNonce, must have one or the other'
@@ -94,7 +95,8 @@ export class FrameMessageCreator {
     const startTime = new Date();
     return new Promise(async (resolve, reject) => {
       // TODO: Make this domain be configurable
-      frameContext.postMessage(JSON.stringify(message), this.lunaSecDomain);
+      console.log('using star instead of ', this.lunaSecDomain);
+      frameContext.postMessage(JSON.stringify(message), '*');
       await timeout(2);
 
       // Spin lock that waits until we receive a response in another "thread".

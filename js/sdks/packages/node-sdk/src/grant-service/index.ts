@@ -1,15 +1,15 @@
 import { GrantType, isToken, Tokenizer } from '@lunasec/tokenizer-sdk';
 import { Request } from 'express';
 
-import { LunaSecAuthentication } from '../authentication';
-import { SessionIdProvider } from '../authentication/types';
+import { JWTService } from '../jwt-service';
+import { SessionIdProvider } from '../jwt-service/types';
 
 export class LunaSecGrantService {
-  private readonly auth: LunaSecAuthentication;
+  private readonly jwtService: JWTService;
   private readonly sessionIdProvider: SessionIdProvider | undefined;
 
-  constructor(auth: LunaSecAuthentication, sessionIdProvider?: SessionIdProvider) {
-    this.auth = auth;
+  constructor(auth: JWTService, sessionIdProvider?: SessionIdProvider) {
+    this.jwtService = auth;
     this.sessionIdProvider = sessionIdProvider;
   }
 
@@ -20,7 +20,7 @@ export class LunaSecGrantService {
     // TODO (cthompson) as long as the node-sdk is the source of truth for authentication
     // this is ok. Once we are using an auth provider for this information, this will need to change.
     // in the future this will happen inside a lambda instead of making a request to the go server
-    const authenticationToken = await this.auth.createAuthenticationJWT({});
+    const authenticationToken = await this.jwtService.createAuthenticationJWT({});
 
     const tokenizer = new Tokenizer({
       authenticationToken: authenticationToken.toString(),
@@ -38,7 +38,7 @@ export class LunaSecGrantService {
     if (!isToken(tokenId)) {
       throw new Error('Attempted to verify a LunaSec Token Grant from a string that didnt look like a token');
     }
-    const authenticationToken = await this.auth.createAuthenticationJWT({});
+    const authenticationToken = await this.jwtService.createAuthenticationJWT({});
 
     const tokenizer = new Tokenizer({
       authenticationToken: authenticationToken.toString(),

@@ -4,7 +4,7 @@ import { AuthenticationJWT } from './authentication-jwt';
 import { awsSecretProvider } from './aws-secret-provider';
 import { environmentSecretProvider } from './environment-secret-provider';
 import { SecretConfig } from './types';
-export class LunaSecAuthentication {
+export class JWTService {
   readonly secretConfig: SecretConfig;
 
   constructor(secretConfig: SecretConfig) {
@@ -36,6 +36,20 @@ export class LunaSecAuthentication {
       .setIssuer('node-sdk')
       .setAudience('secure-frame')
       .setExpirationTime('15m')
+      .sign(secret);
+
+    return new AuthenticationJWT(jwt);
+  }
+
+  public async createSessionRedirectJWT(claims: Record<string, string>): Promise<AuthenticationJWT> {
+    const secret = await this.getSigningSecretKey();
+
+    const jwt = await new SignJWT(claims)
+      .setProtectedHeader({ alg: 'RS256' })
+      .setIssuedAt()
+      .setIssuer('node-sdk')
+      .setAudience('secure-frame')
+      .setExpirationTime('30s')
       .sign(secret);
 
     return new AuthenticationJWT(jwt);

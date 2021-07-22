@@ -63,6 +63,7 @@ export class iFrameRPC {
   }
 
   sendMessageToParentFrame(message: UnknownFrameMessage | FrameNotification) {
+    console.log('sending message to outside of frame ', message);
     window.parent.postMessage(JSON.stringify(message), this.origin);
   }
 

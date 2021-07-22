@@ -33,6 +33,7 @@ export class SecureFrame<E extends keyof ClassLookup> {
   public readonly rpc: iFrameRPC;
 
   constructor(componentName: E, loadingText: Element) {
+    console.log('secure frame came online ', componentName);
     this.componentName = componentName;
     this.loadingText = loadingText;
     [this.secureElement, this.form] = this.insertSecureElement(componentName);
@@ -75,6 +76,7 @@ export class SecureFrame<E extends keyof ClassLookup> {
 
   // Set up the iframe attributes, used on both page load and on any subsequent changes
   async setAttributesFromRPC(attrs: AttributesMessage) {
+    console.log('setting attributes from rpc ', attrs);
     if (attrs.component !== this.componentName) {
       throw new Error(
         'Received an attribute message with a different componentName than the iframe was initialized with'

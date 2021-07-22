@@ -1,8 +1,8 @@
-import { LunaSecAuthentication } from '../authentication';
-import { SecretConfig, SessionIdProvider } from '../authentication/types';
 import { LunaSecExpressAuthPlugin } from '../express-auth-plugin';
 import { LunaSecGrantService } from '../grant-service';
 import { setGrantServiceForDirective, TokenDirective } from '../graphql';
+import { JWTService } from '../jwt-service';
+import { SecretConfig, SessionIdProvider } from '../jwt-service/types';
 import { SecureResolver } from '../secure-resolver';
 import { SecureResolverSdkConfig } from '../secure-resolver/types';
 
@@ -21,21 +21,21 @@ export interface LunaSecConfig {
 // When created, it exposes the other customer-facing classes like the grant service and express plugin.
 // It also works as a dependency injector, for example: passing auth into those plugins' constructors so that they are able to make authentication JWTs to talk to the server.
 export class LunaSec {
-  public auth: LunaSecAuthentication;
+  public jwtService: JWTService;
   public grants: LunaSecGrantService;
   public expressPlugin: LunaSecExpressAuthPlugin;
   public tokenDirective: typeof TokenDirective; // Graphql initializes this class, not us
   public secureResolvers?: SecureResolver;
   constructor(config: LunaSecConfig) {
-    this.auth = new LunaSecAuthentication(config.auth.secrets);
+    this.jwtService = new JWTService(config.auth.secrets);
     // This express plugin is created here if users optionally wish to access it and register it onto their app
     this.expressPlugin = new LunaSecExpressAuthPlugin({
-      auth: this.auth,
+      jwtService: this.jwtService,
       sessionIdProvider: config.auth.sessionIdProvider,
       payloadClaims: config.auth.payloadClaims,
       secureFrameURL: config.secureFrameURL,
     });
-    this.grants = new LunaSecGrantService(this.auth, config.auth.sessionIdProvider);
+    this.grants = new LunaSecGrantService(this.jwtService, config.auth.sessionIdProvider);
     setGrantServiceForDirective(this.grants);
     this.tokenDirective = TokenDirective;
     if (config.secureResolverConfig) {

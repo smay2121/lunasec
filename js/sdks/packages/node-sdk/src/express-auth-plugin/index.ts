@@ -1,26 +1,25 @@
 import { URL } from 'url';
 
-import cookieParser from 'cookie-parser';
 import { Request, Response, Router } from 'express';
 import { JWTPayload } from 'jose/types';
 
-import { LunaSecAuthentication } from '../authentication';
-import { SessionIdProvider } from '../authentication/types';
+import { JWTService } from '../jwt-service';
+import { SessionIdProvider } from '../jwt-service/types';
 
 export interface ExpressAuthPluginConfig {
   sessionIdProvider: SessionIdProvider;
   payloadClaims?: string[];
   secureFrameURL: string;
-  auth: LunaSecAuthentication;
+  jwtService: JWTService;
 }
 
 export class LunaSecExpressAuthPlugin {
   private readonly secureFrameUrl: string;
-  private readonly auth: LunaSecAuthentication;
+  private readonly jwtService: JWTService;
   private readonly config: ExpressAuthPluginConfig;
 
   constructor(config: ExpressAuthPluginConfig) {
-    this.auth = config.auth;
+    this.jwtService = config.jwtService;
     this.config = config;
     this.secureFrameUrl = config.secureFrameURL;
   }
@@ -44,7 +43,7 @@ export class LunaSecExpressAuthPlugin {
     // This gets set into the "access_token" cookie by the Secure Frame Backend after the redirect
     let access_token = undefined;
     try {
-      access_token = await this.auth.createAuthenticationJWT({ session_id: sessionId });
+      access_token = await this.jwtService.createAuthenticationJWT({ session_id: sessionId });
     } catch (e) {
       console.error(`error while attempting to create authentication token: ${e}`);
     }
@@ -71,7 +70,6 @@ export class LunaSecExpressAuthPlugin {
     }
 
     const sessionId = await this.config.sessionIdProvider(req);
-    console.log('sessionId is ', sessionId);
     if (sessionId === null) {
       res.status(400).send({
         success: false,
@@ -90,12 +88,12 @@ export class LunaSecExpressAuthPlugin {
       return;
     }
 
-    console.log('redirecting...', redirectUrl.href);
+    console.debug('redirecting...', redirectUrl.href);
 
     res.redirect(redirectUrl.href);
   }
 
   register(app: Router) {
-    app.get('/secure-frame', cookieParser(), this.handleSecureFrameAuthRequest.bind(this));
+    app.get('/secure-frame', this.handleSecureFrameAuthRequest.bind(this));
   }
 }

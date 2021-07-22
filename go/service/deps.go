@@ -51,6 +51,7 @@ func CreateCSPMiddleware(provider config.Provider) CSPMiddlware {
 			"unsafe-inline",
 			"{{nonce}}",
 		},
+		"sandbox":					 {"allow-scripts allow-same-origin"},
 		"object-src":                {"none"},
 		"default-src":               {"none"},
 		"frame-ancestors":           {"{{referer}}"},
