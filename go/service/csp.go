@@ -169,6 +169,8 @@ func formatCSPDirectives(directives CSPPolicy) string {
 			fallthrough
 		case "report-uri":
 			quoteFormat = withoutQuotes
+		case "sandbox":
+			quoteFormat = withoutQuotes
 		default:
 			quoteFormat = withQuotes
 		}

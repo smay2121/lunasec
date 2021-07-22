@@ -90,7 +90,9 @@ func newServer(configPath string, authType constants.AuthType) http.Handler {
 		sm.HandleFunc(url, authFunc(fn))
 	}
 
-	c := cors.New(cors.Options{})
+	c := cors.New(cors.Options{
+		AllowedOrigins:   "*",
+	})
 	return c.Handler(sm)
 }
 

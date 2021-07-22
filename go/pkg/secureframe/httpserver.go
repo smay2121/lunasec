@@ -109,7 +109,7 @@ func newServer() http.Handler {
 
 	c := cors.New(cors.Options{
 		AllowedHeaders:   appConfig.Cors.AllowedHeaders,
-		AllowedOrigins:   appConfig.Cors.AllowedOrigins,
+		AllowedOrigins:   "*",
 		AllowCredentials: true,
 	})
 	return c.Handler(sm)

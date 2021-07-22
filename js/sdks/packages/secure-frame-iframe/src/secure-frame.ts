@@ -25,7 +25,7 @@ export class SecureFrame<E extends keyof ClassLookup> {
   private readonly loadingText: Element;
   private initialized = false;
   readonly frameNonce: string;
-  readonly origin: string;
+  readonly appOrigin: string;
   readonly secureElement: HTMLElementTagNameMap[TagLookup[E]];
   readonly form: HTMLFormElement;
   private token?: string;
@@ -37,9 +37,10 @@ export class SecureFrame<E extends keyof ClassLookup> {
     this.componentName = componentName;
     this.loadingText = loadingText;
     [this.secureElement, this.form] = this.insertSecureElement(componentName);
-    this.origin = this.getURLSearchParam('origin');
+    this.appOrigin = this.getURLSearchParam('origin');
     this.frameNonce = this.getURLSearchParam('n');
-    this.rpc = new iFrameRPC(this.origin, { host: window.location.origin });
+    this.rpc = new iFrameRPC(this.appOrigin, { host: window.location.origin });
+    console.log('iframes origin is ', window.location.origin);
     this.startRPC();
   }
 

@@ -48,7 +48,6 @@ func (s *grantController) getSessionID(r *http.Request) (sessionID string, err e
 
 func (s *grantController) SetGrant(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Received SetGrant request")
-
 	input := event.GrantSetRequest{}
 	b, err := ioutil.ReadAll(r.Body)
 
