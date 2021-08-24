@@ -2,11 +2,11 @@
 export interface UserModel {
     id: string;
     username: string;
-    ssnToken?: string;
+    ssn?: string;
 }
 
 export interface UserModelProperties {
     id?: string;
     username?: string;
-    ssnToken?: string;
+    ssn?: string;
 }

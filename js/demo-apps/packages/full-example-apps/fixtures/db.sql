@@ -6,7 +6,7 @@ CREATE TABLE users (
     hashed_password BLOB,
     salt BLOB,
     name TEXT,
-    ssn_token TEXT
+    ssn TEXT
 );
 
 INSERT INTO users VALUES(
@@ -19,7 +19,7 @@ INSERT INTO users VALUES(
 
 CREATE TABLE documents (
     user_id INTEGER,
-    token TEXT UNIQUE
+    url TEXT UNIQUE
 );
 
 COMMIT;

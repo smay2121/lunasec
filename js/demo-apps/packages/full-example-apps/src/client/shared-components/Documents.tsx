@@ -4,9 +4,7 @@ import {
   loadUserDocumentsAPI,
   performSaveDocumentsAPI
 } from "../dedicated-tokenizer/passport-auth-example/utils/api-facade";
-import {LunaSecConfigContext, SecureUpload} from "@lunasec/react-sdk";
 import {FormLabel, FormGroup} from '@material-ui/core';
-import {lunaSecDomain} from "../constants";
 
 async function loadDocuments(setDocuments, setError) {
   const documentsResp = await loadUserDocumentsAPI();
@@ -17,7 +15,7 @@ async function loadDocuments(setDocuments, setError) {
   setError(documentsResp.error)
 }
 
-export const SecureDocumentsForm: React.FunctionComponent = () => {
+export const Documents: React.FunctionComponent = () => {
   const [error, setError] = useState<string>(null);
   const [saveSuccessful, setSaveSuccessful] = useState<boolean>(null);
   const [documents, setDocuments] = useState<string[]>(null);
@@ -26,8 +24,8 @@ export const SecureDocumentsForm: React.FunctionComponent = () => {
     void loadDocuments(setDocuments, setError);
   }, []);
 
-  const handleUploadChange = (tokens) => {
-    setDocuments(tokens)
+  const handleDriversLicenseChange = (url) => {
+    setDocuments(url)
   }
 
   const saveDocuments = async () => {
@@ -70,11 +68,10 @@ export const SecureDocumentsForm: React.FunctionComponent = () => {
               <FormLabel htmlFor="drivers-license-upload">
                 Driver's License Upload
               </FormLabel>
-              <SecureUpload
+              <input
                 id="drivers-license-upload"
                 name="uploader"
-                filetokens={documents}
-                onTokenChange={handleUploadChange}
+                onChange={handleDriversLicenseChange}
               />
             </FormGroup>
             {error
@@ -103,20 +100,3 @@ export const SecureDocumentsForm: React.FunctionComponent = () => {
     </Grid>
   );
 }
-
-export const Documents: React.FunctionComponent = () => {
-  const [authError, setAuthError] = useState<string>('')
-  return (
-    <LunaSecConfigContext.Provider
-      value={{
-        lunaSecDomain: lunaSecDomain,
-        authenticationErrorHandler: (_e: Error) => {
-          setAuthError('Failed to authenticate with LunaSec. \n Is a user logged in?');
-        },
-      }}
-    >
-      {authError !== null ? (<p>{authError}</p>) : null}
-      <SecureDocumentsForm />
-    </LunaSecConfigContext.Provider>
-  )
-};

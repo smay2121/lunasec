@@ -4,7 +4,6 @@ import path from 'path';
 import { pagesRouter } from './routes/pages-router';
 import { staticsRouter } from './routes/statics-router';
 import config from '../../config';
-import {lunaSec} from "./configure-lunasec";
 import cookieParser from 'cookie-parser';
 import passport from 'passport';
 import {authRouter} from "./routes/auth-router";
@@ -34,9 +33,6 @@ app.use('/assets', express.static(path.join(process.cwd(), 'assets')));
 app.use('/api/user', userRouter());
 app.use('/api/auth', authRouter());
 app.use('/api/documents', documentsRouter());
-
-// Attach the LunaSec authentication plugin
-lunaSec.expressAuthPlugin.register(app);
 
 app.use(staticsRouter());
 app.use(pagesRouter());

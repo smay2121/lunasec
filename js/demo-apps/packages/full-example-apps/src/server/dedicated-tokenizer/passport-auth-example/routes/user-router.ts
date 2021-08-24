@@ -2,8 +2,6 @@ import bodyParser from 'body-parser';
 import { Router } from 'express';
 import {db} from '../db';
 import {ensureLoggedIn} from "../auth";
-import {lunaSec} from "../configure-lunasec";
-import {GrantType} from "@lunasec/tokenizer-sdk";
 
 export function userRouter() {
   const router = Router();
@@ -14,7 +12,7 @@ export function userRouter() {
   /* GET users listing. */
   router.get('/me',
       (req, res, next) => {
-        db.get('SELECT rowid AS id, username, name, ssn_token FROM users WHERE rowid = ?', [
+        db.get('SELECT rowid AS id, username, name, ssn FROM users WHERE rowid = ?', [
             req.user.id
           ], async function(err, row) {
           if (err) {
@@ -24,24 +22,13 @@ export function userRouter() {
             });
           }
 
-          const ssnToken = row.ssn_token;
-
-          try {
-            await lunaSec.grants.create(req.user.id, ssnToken);
-          } catch (e) {
-            return res.json({
-              success: false,
-              error: e
-            })
-          }
-
           // TODO: Handle undefined row.
 
           const user = {
             id: row.id.toString(),
             username: row.username,
             displayName: row.name,
-            ssnToken: row.ssn_token
+            ssnToken: row.ssn
           };
           res.json({
               success: true,
@@ -54,19 +41,10 @@ export function userRouter() {
     async (req, res, next) => {
       const {properties} = req.body;
 
-      const ssnToken = properties.ssnToken;
+      const ssn = properties.ssn;
 
-      try {
-        await lunaSec.grants.verify(req.user.id, ssnToken, GrantType.StoreToken);
-      } catch (e) {
-        return res.json({
-          success: false,
-          error: e
-        })
-      }
-
-      db.run('UPDATE users SET ssn_token = ? WHERE rowid = ?', [
-        properties.ssnToken,
+      db.run('UPDATE users SET ssn = ? WHERE rowid = ?', [
+        properties.ssn,
         req.user.id
       ], function(err) {
         if (err) {

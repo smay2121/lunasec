@@ -29,20 +29,15 @@ async function loadUser(setUser, setError) {
 export const User: React.FunctionComponent = () => {
   const classes = useStyles({});
 
-  const [authError, setAuthError] = useState<string>('')
   const [saveSuccessful, setSaveSuccessful] = useState<boolean>(null);
   const [error, setError] = useState<string>(null);
   const [user, setUser] = useState<UserModel>(null);
 
-  const [ssnToken, setSSNToken] = useState<string>(null);
-
-  const ssnValidated = (isValid) => {
-    console.log(`ssn is valid? ${isValid}`)
-  }
+  const [ssn, setSSN] = useState<string>(null);
 
   const persistTokens = (e) => {
     e.preventDefault();
-    setSSNToken(e.target.value);
+    setSSN(e.target.value);
   }
 
   useEffect(() => {
@@ -50,17 +45,17 @@ export const User: React.FunctionComponent = () => {
   }, []);
 
   const handleSSNChange = (e) => {
-    setSSNToken(e.target.value);
+    setSSN(e.target.value);
   }
 
   const saveProperties = async (e) => {
-    if (ssnToken === null) {
-      setError('ssnToken is null');
+    if (ssn === null) {
+      setError('ssn is null');
       return;
     }
 
     const res = await performSaveUserPropertiesAPI({
-      ssnToken: ssnToken
+      ssn: ssn
     });
     if (!res.success) {
       setError(JSON.stringify(res.error));
@@ -80,62 +75,49 @@ export const User: React.FunctionComponent = () => {
   }
 
   return (
-    <LunaSecConfigContext.Provider
-      value={{
-        lunaSecDomain: lunaSecDomain,
-        authenticationErrorHandler: (_e: Error) => {
-          setAuthError('Failed to authenticate with LunaSec. \n Is a user logged in?');
-        },
-      }}
-    >
-      {authError !== null ? (<p>{authError}</p>) : null}
-      <Grid item xs={12}>
-        {error !== null
-        ? (<Card>
-              <CardHeader title={'Error'} />
-              <CardContent><p>{error}</p></CardContent>
-            </Card>)
-        : null}
-        <Card>
-          <CardHeader title={`User: ${user.username}`}/>
-          <CardContent>
-            <SecureForm name="secure-form-example" onSubmit={saveProperties}>
-              <FormGroup
-                className={classes.margin}
+    <Grid item xs={12}>
+      {error !== null
+      ? (<Card>
+            <CardHeader title={'Error'} />
+            <CardContent><p>{error}</p></CardContent>
+          </Card>)
+      : null}
+      <Card>
+        <CardHeader title={`User: ${user.username}`}/>
+        <CardContent>
+          <SecureForm name="secure-form-example" onSubmit={saveProperties}>
+            <FormGroup
+              className={classes.margin}
+            >
+              <Typography>
+                Id: {user.id}
+              </Typography>
+            </FormGroup>
+            <FormGroup className={classes.margin}>
+              <FormLabel htmlFor="ssn-token-input">
+                Social Security Number
+              </FormLabel>
+              <input
+                id="ssn-token-input"
+                name="ssn"
+                type="text"
+                onChange={handleSSNChange}
+                value={user.ssn}
+              />
+            </FormGroup>
+            <div className={classes.margin}>
+              <Button
+                variant="outlined"
+                color="primary"
+                style={{ textTransform: "none" }}
+                type="submit"
               >
-                <Typography>
-                  Id: {user.id}
-                </Typography>
-              </FormGroup>
-              <FormGroup className={classes.margin}>
-                <FormLabel htmlFor="ssn-token-input">
-                  Social Security Number
-                </FormLabel>
-                <SecureInput
-                  id="ssn-token-input"
-                  name="ssn"
-                  type="ssn"
-                  validator="SSN"
-                  onValidate={(isValid) => ssnValidated(isValid)}
-                  onChange={handleSSNChange}
-                  token={user.ssnToken}
-                  placeholder="XXX-XXX-XXXX"
-                />
-              </FormGroup>
-              <div className={classes.margin}>
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  style={{ textTransform: "none" }}
-                  type="submit"
-                >
-                  Save
-                </Button>
-              </div>
-            </SecureForm>
-          </CardContent>
-        </Card>
-      </Grid>
-    </LunaSecConfigContext.Provider>
+                Save
+              </Button>
+            </div>
+          </SecureForm>
+        </CardContent>
+      </Card>
+    </Grid>
   );
 };
